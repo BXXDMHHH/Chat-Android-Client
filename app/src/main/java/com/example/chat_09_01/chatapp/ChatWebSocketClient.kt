@@ -1,5 +1,6 @@
 package com.example.chat_09_01.chatapp
 
+import com.example.chat_09_01.data.Message
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
@@ -22,8 +23,8 @@ class ChatWebSocketClient {
     private var webSocket: WebSocket? = null
 
     // 用于 UI 的消息列表
-    private val _messages = MutableStateFlow<List<String>>(emptyList())
-    val messages: StateFlow<List<String>> = _messages
+    private val _messages = MutableStateFlow<List<Message>>(emptyList())
+    val messages: StateFlow<List<Message>> = _messages
 
     // 连接状态
     private val _isConnected = MutableStateFlow(false)
@@ -34,7 +35,7 @@ class ChatWebSocketClient {
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 _isConnected.value = true
-                addMessage("System: Connected to server")
+                addMessage("System: Connected to server",)
 
                 pendingUsername?.let{
                     webSocket.send("join:$it")
@@ -42,6 +43,7 @@ class ChatWebSocketClient {
                 }
             }
 
+            //客户端收到服务器消息raw
             override fun onMessage(webSocket: WebSocket, text: String) {
                 addMessage(text)
             }
@@ -66,8 +68,45 @@ class ChatWebSocketClient {
         })
     }
 
-    fun sendMessage(text: String) {
+    fun sendMessage(text: String,myUsername: String) {
         webSocket?.send(text)
+        addMessage(Message(text = "$myUsername: $text", isFromMe = true))
+    }
+
+    private fun addMessage(message: Message) {
+        _messages.value = _messages.value + message
+        println("【更新Flow】消息列表size=${_messages.value.size}, msg=${message.text}")
+    }
+
+    private fun addMessage(rawText: String) {
+        println("【addMessage入口】收到rawText = $rawText")
+
+        if (rawText.startsWith("System")) {
+            addMessage(Message(text = rawText, isFromMe = false))
+            return
+        }
+        if (rawText.startsWith("Error: ")) {
+            addMessage(Message(text = rawText, isFromMe = false))
+            return
+        }
+
+
+        val splitIndex = rawText.indexOf(':')
+        println("【addMessage】splitIndex=$splitIndex")
+        if(splitIndex > 0){
+            val senderName = rawText.substring(0, splitIndex)
+            val content = rawText.substring(splitIndex + 1)
+            val msg = Message(text = "$senderName: $content", isFromMe = false)
+            addMessage(msg)
+            println("【addMessage】解析带冒号消息 $msg")
+        }else{
+            // 后端纯文本消息走这里！
+            val msg = Message(text = rawText, isFromMe = false)
+            addMessage(msg)
+            println("【addMessage】无冒号原始消息，直接添加 $msg")
+        }
+
+
     }
 
     fun disconnect() {
@@ -84,8 +123,6 @@ class ChatWebSocketClient {
         webSocket?.send("chat:$content")
     }
 
-    private fun addMessage(msg: String) {
-        _messages.value = _messages.value + msg
-    }
+
 
 }

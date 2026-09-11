@@ -2,6 +2,7 @@ package com.example.chat_09_01.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.example.chat_09_01.chatapp.ChatWebSocketClient
+import com.example.chat_09_01.data.Message
 import kotlinx.coroutines.flow.StateFlow
 import java.net.URLEncoder
 
@@ -12,7 +13,7 @@ class ChatViewModel : ViewModel() {
     private val chatClient = ChatWebSocketClient()
 
     // 暴露给 UI 的状态
-    val messages: StateFlow<List<String>> = chatClient.messages
+    val messages: StateFlow<List<Message>> = chatClient.messages
     val isConnected: StateFlow<Boolean> = chatClient.isConnected
 
     var username: String = ""
@@ -30,7 +31,7 @@ class ChatViewModel : ViewModel() {
     }
 
     fun sendMessage(text: String) {
-        chatClient.sendMessage(text)
+        chatClient.sendMessage(text,username)
     }
 
     // ViewModel 销毁时断开连接，释放资源
