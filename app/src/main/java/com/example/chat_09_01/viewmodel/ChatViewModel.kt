@@ -21,9 +21,10 @@ class ChatViewModel : ViewModel() {
 
     // 连接服务器（模拟器访问宿主机用 10.0.2.2，真机用局域网 IP）
     fun connect(username: String) {
+        if (isConnected.value)return
         this.username = username
         val url = "ws://10.0.2.2:8080/?username=${java.net.URLEncoder.encode(username, "UTF-8")}"
-        chatClient.connect(url)
+        chatClient.connect(url,username)
     }
 
     fun disconnect() {
@@ -31,7 +32,7 @@ class ChatViewModel : ViewModel() {
     }
 
     fun sendMessage(text: String) {
-        chatClient.sendMessage(text,username)
+        chatClient.sendMessage(text)
     }
 
     // ViewModel 销毁时断开连接，释放资源

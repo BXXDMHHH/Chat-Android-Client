@@ -4,43 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.chat_09_01.data.Message
 import com.example.chat_09_01.viewmodel.ChatViewModel
+import com.example.chat_09_01.ui.chat_ui.ChatAppRoot
 
 class MainActivity : ComponentActivity() {
 
@@ -49,11 +15,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val chatViewModel: ChatViewModel = viewModel()
-            ChatApp(chatViewModel)
+            ChatAppRoot(chatViewModel)
         }
     }
 }
 
+/*
 @Composable
 fun ChatApp(chatViewModel: ChatViewModel) {
     // 从 ViewModel 收集状态
@@ -66,9 +33,9 @@ fun ChatApp(chatViewModel: ChatViewModel) {
 
     val listState = rememberLazyListState()
 
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
-            listState.scrollToItem(0)
+    LaunchedEffect(isConnected) {
+        if (!isConnected && isLoggedIn) {
+            isLoggedIn = false
         }
     }
 
@@ -131,7 +98,6 @@ fun ChatApp(chatViewModel: ChatViewModel) {
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp),
                 state = listState,
-                reverseLayout = true
             ) {
                 items(messages.reversed()) { msg ->
                     IOKEWdMessageBubble(msg)
@@ -192,32 +158,75 @@ fun ChatApp(chatViewModel: ChatViewModel) {
 fun IOKEWdMessageBubble(message: Message) {
 
 
+    if (message.isSystem){
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = message.text,
+                color = Color.Gray,
+                fontSize = 12.sp
+            )
+        }
+        return
+    }
+
     // 根据发送者决定气泡颜色和对齐方式
-    val (backgroundColor, textColor, alignment) = if (message.isFromMe) {
+    val (backgroundColor, textColor) = if (message.isFromMe) {
         Triple(Color(0xFF95EC69), Color.White, Alignment.CenterEnd) // 紫色气泡在右
     } else {
         Triple(Color(0xFFFFFFFF), Color.Black, Alignment.CenterStart) // 灰色气泡在左
     }
 
+    // ---------- 一行：头像 + 用户名 + 气泡 ----------
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        horizontalArrangement = if (message.isFromMe) Arrangement.End else Arrangement.Start
+        horizontalArrangement = if (message.isFromMe) Arrangement.End else Arrangement.Start,
+        verticalAlignment = Alignment.Top
     ) {
-        Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = backgroundColor,
-            modifier = Modifier.widthIn(max = 280.dp) // 限制最大宽度，防止太宽
-        ) {
+        // 别人的头像（在左）
+        UserAvatar(message.text, size = 36.dp)
+        Spacer(modifier = Modifier.width(8.dp))
+    }
+
+    // 中间：用户名 + 气泡
+    Column(
+        horizontalAlignment = if (message.isFromMe) Alignment.End else Alignment.Start
+    ) {
+        if (!message.isFromMe) {
             Text(
-                text = message.text,
-                color = textColor,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(12.dp)
+                text = message.username,
+                fontSize = 12.sp,
+                color = Color.Green,
+                modifier = Modifier.padding(start = 4.dp, bottom = 2.dp)
             )
         }
     }
+
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = backgroundColor,
+        shadowElevation = 1.dp,
+        modifier = Modifier.widthIn(max = 260.dp)
+    ) {
+        Text(
+            text = message.text,
+            color = textColor,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.padding(12.dp)
+        )
+    }
+
+    if (message.isFromMe) {
+        Spacer(modifier = Modifier.width(8.dp))
+        UserAvatar(message.username, size = 36.dp)
+    }
 }
 
+*/
