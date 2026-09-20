@@ -16,6 +16,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,11 +25,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.chat_09_01.data.Message
 import com.example.chat_09_01.viewmodel.ChatViewModel
 
-// ========== 页面2：聊天室页面 ChatRoomPage ==========
 @Composable
 fun ChatRoomPage(
     onExit: () -> Unit,
@@ -39,12 +39,18 @@ fun ChatRoomPage(
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
+    // 新消息到达时自动滚到底部
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) {
+            listState.animateScrollToItem(messages.lastIndex)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // 连接状态
         Text(
             text = if (isConnected) "Connected" else "Disconnected",
             color = if (isConnected) Color.Green else Color.Red
@@ -52,22 +58,27 @@ fun ChatRoomPage(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 消息列表
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp),
-            state = listState,
+            state = listState
         ) {
-            items(messages) { msg ->
-                MessageBubble(msg)
+            items(messages) { entity ->
+                MessageBubble(
+                    Message(
+                        username = entity.username,
+                        text = entity.text,
+                        isFromMe = entity.isFromMe,
+                        isSystem = entity.isSystem
+                    )
+                )
             }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 输入区域
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -99,11 +110,10 @@ fun ChatRoomPage(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 退出按钮
         Button(
             onClick = {
                 viewModel.disconnect()
-                onExit() // 通知根组件切回登录页
+                onExit()
             },
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -111,8 +121,3 @@ fun ChatRoomPage(
         }
     }
 }
-
-
-
-
-

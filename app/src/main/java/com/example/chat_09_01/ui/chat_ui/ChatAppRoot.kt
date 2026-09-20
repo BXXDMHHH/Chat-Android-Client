@@ -12,29 +12,21 @@ import com.example.chat_09_01.viewmodel.ChatViewModel
 @Composable
 fun ChatAppRoot(chatViewModel: ChatViewModel) {
     var goChatRoom by remember { mutableStateOf(false) }
-
     val isConnected by chatViewModel.isConnected.collectAsState()
 
     LaunchedEffect(isConnected) {
-        if (!isConnected && goChatRoom) {
-            goChatRoom = false
-        }
+        if (!isConnected && goChatRoom) goChatRoom = false
     }
 
     if (!goChatRoom) {
         LoginPage(
-            onLoginSuccess = {
-                goChatRoom = true
-            },
+            onLoginSuccess = { goChatRoom = true },
             viewModel = chatViewModel
         )
-    }else {
+    } else {
         ChatRoomPage(
-            onExit = {
-                goChatRoom = false
-            },
+            onExit = { goChatRoom = false; chatViewModel.disconnect() },
             viewModel = chatViewModel
         )
     }
-
 }
